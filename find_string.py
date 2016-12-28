@@ -71,7 +71,7 @@ def patterned(names, pattern):
 
 to_search = 'སྤྱིར་བཏང་ང་ཚོ་ཡིན་ན་ཡང་གོམས་མ་གོམས་ཀྱི་དབང་གིས'
 in_path = patterned(['recordings', 'dialogs', 'children_stories', 'oral_corpus'],
-                    '../tibetan-wordbreak-js/make/updateLexicon/{}/files')
+                    '../tibetan-wordbreak-js/make/updateLexicon/{}/files')  # change this line to fit your needs
 
 #search_in_folders(in_path, clean_string(to_search, del_spaces=True))
 
@@ -164,7 +164,7 @@ def find_file_pairs(path1, path2):
     print(pairs)
     print(len(pairs))
 
-#find_file_pairs('/home/swan/Documents/PycharmProjects/tibetan-wordbreak-js/make/updateLexicon/recordings/files', '/home/swan/Documents/modern_tib_corpus/flattened_txt')
+#find_file_pairs('input/recordings', 'output/flattened_txt')
 #######################################################################################
 
 
@@ -209,8 +209,8 @@ def move(origin, destination):
         shutil.copy(filename, destination)
         os.rename('{}/{}'.format(destination, name), '{}/{}'.format(destination, new_name))
 
-#move('/home/swan/Documents/modern_tib_corpus/5 studio recording for Nanhai nunnery/Not Segmented', '/home/swan/Documents/modern_tib_corpus/flattened')
-#move('/home/swan/Documents/modern_tib_corpus/4 monastery and nunnery with list/unsegmented/by topics', '/home/swan/Documents/modern_tib_corpus/flattened')
+#move('input/corpus/5 studio recording for Nanhai nunnery/Not Segmented', 'output/flattened')
+#move('input/4 monastery and nunnery with list/unsegmented/by topics', 'output/flattened')
 #################################################################################################################
 
 
@@ -226,9 +226,9 @@ def extract_subset(destination, all_abs_paths):
         os.rename(filename[1], filename[2])
         os.remove(filename[3])
 
-original_path = '/home/swan/Documents/PycharmProjects/tibetan-wordbreak-js/make/updateLexicon/recordings/files/'
-delete_path = '/home/swan/Documents/modern_tib_corpus/flattened_txt/'
-export_path = '/home/swan/Documents/modern_tib_corpus/segmented_4'
+original_path = 'input/recordings/'
+delete_path = 'output/flattened_txt/'
+export_path = 'output/segmented_4'  # adapt to the correct folder
 
 pairs5 = [('20 Chokdup.txt', 'Kunkyab__3ཉལ་ཁང་གཙང་སྦྲ་དང་ལས་གཞི་གོ་སྒྲིག་བྱེད་པ།.txt'),
 ('1 Chokdup.txt', 'Kunkyab_23བླ་མས་སློབ་མར__བླ་མས་སློབ་མ་རྣམས་ལ་སྡོམ་པ་ལེན་འཇུག་པ༡.txt'),
@@ -514,6 +514,7 @@ pairs4 = [('Jampa 58.txt', 'གནས་ཚུལ།__གུར་དང་མ�
 ('Sherab 8.txt', 'ལམ་སྟོན།__ཕྲུ་གུའི་འདུན་ལམ་ལམ་སྟོན།.txt'),
 ('palgun dawa 32.txt', 'འཕྲོད་བསྟེན།__ང་ཟི་ལིང་ལ་སྨན་པ་བསྟེན་དུ་སོང་བ་ཡིན། .txt')]
 
+# adapt the following to your needs.
 
 for i in range(len(pairs4)):
     pairs4[i] = (original_path+pairs4[i][0], export_path+'/'+pairs4[i][0], export_path+'/'+pairs4[i][1], delete_path+pairs4[i][1])
