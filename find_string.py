@@ -89,17 +89,16 @@ def is_segmented_version(string_a, string_b, ratio=55):
     # clean files
     string_a = clean_string(string_a, strip=True, del_spaces=True, del_dashes=True, del_returns=True)
     string_b = clean_string(string_b, strip=True, del_spaces=True, del_dashes=True, del_returns=True)
+    string_b = re.sub(r'[0-9]+', '', string_b).replace(':', '').replace('#', '').replace('-', '')  # remove timestamps
     # find ratio
     # d = difflib.SequenceMatcher(a=string_a, b=string_b)
 
     # return value
 
-    # 1rst 2 syls
-    firsta = '་'.join(string_a.split('་')[:8])
-    firstb = '་'.join(string_b.split('་')[:8])
-
     found_ratio = fuzz.ratio(string_a, string_b)
     if found_ratio >= ratio:
+        firsta = '་'.join(string_a.split('་')[:8])
+        firstb = '་'.join(string_b.split('་')[:8])
         print(found_ratio)
         print(firsta)
         print(firstb)
@@ -121,23 +120,23 @@ def first_parts(string, num=10, sep='།'):
     return out
 
 
-def raw_folder_content(path):
+def raw_folder_content(path, num):
     files_content = {}
     for f in os.listdir(path):
         full_path = '{}/{}'.format(path, f)
         # open file
         raw = open_file(full_path)
-        raw = first_parts(raw)
+        raw = first_parts(raw, num)
         files_content[full_path] = raw
     return files_content
 
 
-def pair_files(content1, content2):
+def pair_files(content1, content2, ratio):
     paired = []
     total = defaultdict(int)
     for k1, v1 in content1.items():
         for k2, v2 in content2.items():
-            if is_segmented_version(v1, v2):
+            if is_segmented_version(v1, v2, ratio):
                 name1 = k1.split('/')[-1]
                 name2 = k2.split('/')[-1]
                 print(name1, name2, '\n')
@@ -156,15 +155,15 @@ def pair_files(content1, content2):
     return paired
 
 
-def find_file_pairs(path1, path2):
-    path1_content = raw_folder_content(path1)
-    path2_content = raw_folder_content(path2)
-    pairs = pair_files(path1_content, path2_content)
+def find_file_pairs(path1, path2, ratio=70, context=10):
+    path1_content = raw_folder_content(path1, context)
+    path2_content = raw_folder_content(path2, context)
+    pairs = pair_files(path1_content, path2_content, ratio)
 
     print(pairs)
     print(len(pairs))
 
-# find_file_pairs('input/recordings', 'output/flattened_txt')
+find_file_pairs('input/4-5-missing', 'output/flattened_txt', ratio=50, context=10)
 #######################################################################################
 
 
@@ -178,7 +177,7 @@ def list_absolute_paths(dir):
     all_files = []
     for root, _dirs, files in itertools.islice(os.walk(dir), 1, None):
         for filename in files:
-            if filename != '._.DS_Store':
+            if not filename.endswith('DS_Store'):
                 all_files.append(os.path.join(root, filename))
     return all_files
 
@@ -191,14 +190,14 @@ def new_prefix(origin, parts=None, sep='_'):
         return sep.join([o_parts[p] for p in parts if p <= len(o_parts)-1])
 
 
-def move(origin, destination):
+def move(origin, destination, path_parts=None):
     # list all files
     all_abs_paths = list_absolute_paths(origin)
 
     for filename in all_abs_paths:
         logging.info(filename)
         name = filename.split('/')[-1]
-        prefix = new_prefix(filename, parts=[8])
+        prefix = new_prefix(filename, path_parts)
         # prefix = prefix.replace(''.join(get_longest_common_subseq([name, prefix])), '')
         new_name = '{}__{}'.format(prefix, name)
 
@@ -209,26 +208,9 @@ def move(origin, destination):
         shutil.copy(filename, destination)
         os.rename('{}/{}'.format(destination, name), '{}/{}'.format(destination, new_name))
 
-# move('input/corpus/5 studio recording for Nanhai nunnery/Not Segmented', 'output/flattened')
-# move('input/4 monastery and nunnery with list/unsegmented/by topics', 'output/flattened')
+# move('input/corpus/5 studio recording for Nanhai nunnery/Not Segmented', 'output/flattened', path_parts=[4])
+# move('input/4 monastery and nunnery with list/unsegmented/by topics', 'output/flattened', path_parts=[8])
 #################################################################################################################
-
-
-def extract_subset(destination, all_abs_paths):
-    # list all files
-
-    for filename in all_abs_paths:
-        # create directory if not yet existing
-        create_missing_dir(destination)
-
-        # copy the file and rename it right after
-        shutil.copy(filename[0], destination)
-        os.rename(filename[1], filename[2])
-        os.remove(filename[3])
-
-original_path = 'input/recordings/'
-delete_path = 'output/flattened_txt/'
-export_path = 'output/segmented_4'  # adapt to the correct folder
 
 pairs5 = [('20 Chokdup.txt', 'Kunkyab__3ཉལ་ཁང་གཙང་སྦྲ་དང་ལས་གཞི་གོ་སྒྲིག་བྱེད་པ།.txt'),
         ('1 Chokdup.txt', 'Kunkyab_23བླ་མས་སློབ་མར__བླ་མས་སློབ་མ་རྣམས་ལ་སྡོམ་པ་ལེན་འཇུག་པ༡.txt'),
@@ -384,7 +366,11 @@ pairs5 = [('20 Chokdup.txt', 'Kunkyab__3ཉལ་ཁང་གཙང་སྦྲ�
         ('Dorji Tsering12.txt', 'Jampa_4གནའ་བོའི་དམ་པ་གོང་མ་རྣམས།__REC011_2.txt'),
         ('khar7.txt', 'Khando Dolma65གཞུང་བཀའ་པོད་ལྔའི་སྐོར།__REC017_1.txt'),
         ('Jampa 8.txt', 'Dawa_13__བླ་མ་བསྟེན་ཚུལ་དང་། འཆི་བ། ལས་དབང་།2.txt'),
-        ('shawo5.txt', 'Chokdup_31__བགྲོ་གླེང་གི་སྐོར་བཤད་པ།1.txt')
+        ('shawo5.txt', 'Chokdup_31__བགྲོ་གླེང་གི་སྐོར་བཤད་པ།1.txt'),
+        ('khar14.txt', 'Khando Dolma__79མཚོ་མོའི་སློབ་སྦྱོང་།.txt'),
+        ('khar13.txt', 'Khando Dolma__78མཚོ་མོའི་ནོར་འཁྲུལ།.txt'),
+        ('khar15.txt', 'Khando Dolma__83དེབ་ཆོས་ཉོ་བ།.txt'),
+        ('khar17.txt', 'Khando Dolma__REC004_1.txt')
 ]
 
 
@@ -516,9 +502,28 @@ pairs4 = [('Jampa 58.txt', 'གནས་ཚུལ།__གུར་དང་མ�
             ('palgun dawa 32.txt', 'འཕྲོད་བསྟེན།__ང་ཟི་ལིང་ལ་སྨན་པ་བསྟེན་དུ་སོང་བ་ཡིན། .txt')
 ]
 
-# adapt the following to your needs.
 
-for i in range(len(pairs4)):
-    pairs4[i] = (original_path+pairs4[i][0], export_path+'/'+pairs4[i][0], export_path+'/'+pairs4[i][1], delete_path+pairs4[i][1])
+def absolutify(pairs, original_path, delete_path, export_path):
+    for i in range(len(pairs)):
+        pairs[i] = (original_path + pairs[i][0], export_path + '/' + pairs[i][0], export_path + '/' + pairs[i][1], delete_path + pairs[i][1])
+    return pairs
 
-extract_subset(export_path, pairs4)
+
+def extract_subset(origin, destination, delete, pairs):
+    # list all files
+    all_abs_paths = absolutify(pairs, origin, delete, destination)
+    for filename in all_abs_paths:
+        # create directory if not yet existing
+        create_missing_dir(destination)
+
+        # copy the file and rename it right after
+        shutil.copy(filename[0], destination)
+        os.rename(filename[1], filename[2])
+        os.remove(filename[3])
+
+
+original_path = 'input/recordings/'
+delete_path = 'output/flattened_txt/'
+export_path = 'output/segmented_5'  # adapt to the correct folder
+
+extract_subset(original_path, export_path, delete_path, pairs5)

@@ -290,8 +290,6 @@ rec_section4 = [a[0] for a in pairs4]
 rec_section5 = [a[0] for a in pairs5]
 missing = [a for a in recordings if a not in rec_section4 and a not in rec_section5]
 
-print(len(missing))
-print(str(missing))
-
-for i in missing:
-    shutil.copy('input/recordings/{}'.format(i), 'input/4-5-missing')
+#
+# for i in missing:
+#     shutil.copy('input/recordings/{}'.format(i), 'input/4-5-missing')
