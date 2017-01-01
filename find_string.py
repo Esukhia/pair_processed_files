@@ -1,4 +1,3 @@
-# are you sure?
 from PyTib.common import open_file, get_longest_common_subseq
 import os
 import re
