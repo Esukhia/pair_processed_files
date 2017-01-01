@@ -8,7 +8,6 @@ import logging
 from collections import defaultdict
 from fuzzywuzzy import fuzz
 
-
 def clean_string(string,
                  tabs2spaces=False, under2spaces=False,
                  single_spaces=False, single_returns=False, single_unders=False,
