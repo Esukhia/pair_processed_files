@@ -1,4 +1,4 @@
-from PyTib.common import open_file, get_longest_common_subseq
+from PyTib.common import open_file, clean_string, get_longest_common_subseq
 import os
 import re
 import difflib
@@ -7,33 +7,6 @@ import shutil
 import logging
 from collections import defaultdict
 from fuzzywuzzy import fuzz
-
-
-def clean_string(string,
-                 tabs2spaces=False, under2spaces=False,
-                 single_spaces=False, single_returns=False, single_unders=False,
-                 del_spaces=False, del_returns=False, del_dashes=False,
-                 l_strip=False, r_strip=False, strip=False,):
-    # Replacements
-    if tabs2spaces: string = string.replace('\t', ' ')
-    if under2spaces: string = string.replace('_', ' ')
-
-    # Reducing to one element
-    if single_spaces: string = re.sub(r' +', r' ', string)
-    if single_returns: string = re.sub(r'\n+', r'\n', string)
-    if single_unders: string = re.sub(r'_+', r'_', string)
-
-    # Delete the given elements
-    if del_spaces: string = string.replace(' ', '')
-    if del_returns: string = string.replace('\n', '')
-    if del_dashes: string = string.replace('-', '')
-
-    # strips
-    if l_strip: string = string.lstrip()
-    if r_strip: string = string.rstrip()
-    if strip: string = string.strip()
-
-    return string
 
 
 def find_string(in_path, string):
@@ -94,12 +67,12 @@ def is_segmented_version(string_a, string_b, ratio=55):
     # d = difflib.SequenceMatcher(a=string_a, b=string_b)
 
     # return value
-
     found_ratio = fuzz.ratio(string_a, string_b)
     if found_ratio >= ratio:
         firsta = '་'.join(string_a.split('་')[:8])
         firstb = '་'.join(string_b.split('་')[:8])
         print(found_ratio)
+        #print('longest:', get_longest_common_subseq([string_a, string_b]))
         print(firsta)
         print(firstb)
         return True
@@ -120,13 +93,14 @@ def first_parts(string, num=10, sep='།'):
     return out
 
 
-def raw_folder_content(path, num):
+def raw_folder_content(path, num=10):
     files_content = {}
     for f in os.listdir(path):
         full_path = '{}/{}'.format(path, f)
         # open file
         raw = open_file(full_path)
-        raw = first_parts(raw, num)
+        if num != 0:
+            raw = first_parts(raw, num)
         files_content[full_path] = raw
     return files_content
 
@@ -156,14 +130,21 @@ def pair_files(content1, content2, ratio):
 
 
 def find_file_pairs(path1, path2, ratio=70, context=10):
+    """
+
+    :param path1:
+    :param path2:
+    :param ratio:  similarity ratio threshold
+    :param context: number of characters used to compare. takes the whole file if 0
+    :return:
+    """
     path1_content = raw_folder_content(path1, context)
     path2_content = raw_folder_content(path2, context)
     pairs = pair_files(path1_content, path2_content, ratio)
 
     print(pairs)
     print(len(pairs))
-
-find_file_pairs('input/4-5-missing', 'output/flattened_txt', ratio=50, context=10)
+find_file_pairs('input/unknown_raw', 'input/recordings', ratio=47, context=0)
 #######################################################################################
 
 
@@ -526,4 +507,4 @@ original_path = 'input/recordings/'
 delete_path = 'output/flattened_txt/'
 export_path = 'output/segmented_5'  # adapt to the correct folder
 
-extract_subset(original_path, export_path, delete_path, pairs5)
+#extract_subset(original_path, export_path, delete_path, pairs5)
